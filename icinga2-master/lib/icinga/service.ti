@@ -1,0 +1,83 @@
+/******************************************************************************
+ * Icinga 2                                                                   *
+ * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ *                                                                            *
+ * This program is free software; you can redistribute it and/or              *
+ * modify it under the terms of the GNU General Public License                *
+ * as published by the Free Software Foundation; either version 2             *
+ * of the License, or (at your option) any later version.                     *
+ *                                                                            *
+ * This program is distributed in the hope that it will be useful,            *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with this program; if not, write to the Free Software Foundation     *
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.             *
+ ******************************************************************************/
+
+#include "icinga/checkable.hpp"
+#include "icinga/host.hpp"
+#include "icinga/icingaapplication.hpp"
+#include "icinga/customvarobject.hpp"
+
+library icinga;
+
+namespace icinga
+{
+
+code {{{
+class I2_ICINGA_API ServiceNameComposer : public NameComposer
+{
+public:
+	virtual String MakeName(const String& shortName, const Object::Ptr& context) const;
+	virtual Dictionary::Ptr ParseName(const String& name) const;
+};
+}}}
+
+class Service : Checkable < ServiceNameComposer
+{
+	load_after Host;
+
+	[config, no_user_modify] array(name(ServiceGroup)) groups {
+		default {{{ return new Array(); }}}
+	};
+
+	[config] String display_name {
+		get {{{
+			if (m_DisplayName.IsEmpty())
+				return GetShortName();
+			else
+				return m_DisplayName;
+		}}}
+	};
+	[config, required] name(Host) host_name;
+	[no_storage, navigation] Host::Ptr host {
+		get;
+		navigate {{{
+			return GetHost();
+		}}}
+	};
+	[enum, no_storage] ServiceState "state" {
+		get {{{
+			return GetStateRaw();
+		}}}
+	};
+	[enum, no_storage] ServiceState last_state {
+		get {{{
+			return GetLastStateRaw();
+		}}}
+	};
+	[enum, no_storage] ServiceState last_hard_state {
+		get {{{
+			return GetLastHardStateRaw();
+		}}}
+	};
+	[state] double last_state_ok (LastStateOK);
+	[state] double last_state_warning;
+	[state] double last_state_critical;
+	[state] double last_state_unknown;
+};
+
+}

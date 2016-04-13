@@ -1,0 +1,94 @@
+/******************************************************************************
+ * Icinga 2                                                                   *
+ * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ *                                                                            *
+ * This program is free software; you can redistribute it and/or              *
+ * modify it under the terms of the GNU General Public License                *
+ * as published by the Free Software Foundation; either version 2             *
+ * of the License, or (at your option) any later version.                     *
+ *                                                                            *
+ * This program is distributed in the hope that it will be useful,            *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with this program; if not, write to the Free Software Foundation     *
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.             *
+ ******************************************************************************/
+
+#include "base/configobject.hpp"
+#include "base/utility.hpp"
+#impl_include "icinga/service.hpp"
+
+library icinga;
+
+namespace icinga
+{
+
+code {{{
+/**
+ * The type of a service comment.
+ *
+ * @ingroup icinga
+ */
+enum CommentType
+{
+	CommentUser = 1,
+	CommentDowntime = 2,
+	CommentFlapping = 3,
+	CommentAcknowledgement = 4
+};
+
+class I2_ICINGA_API CommentNameComposer : public NameComposer
+{
+public:
+	virtual String MakeName(const String& shortName, const Object::Ptr& context) const;
+	virtual Dictionary::Ptr ParseName(const String& name) const;
+};
+}}}
+
+class Comment : ConfigObject < CommentNameComposer
+{
+	load_after Host;
+	load_after Service;
+
+	[config, protected, required, navigation(host)] name(Host) host_name {
+		navigate {{{
+			return Host::GetByName(GetHostName());
+		}}}
+	};
+	[config, protected, navigation(service)] String service_name {
+		track {{{
+			if (!oldValue.IsEmpty()) {
+				Service::Ptr service = Service::GetByNamePair(GetHostName(), oldValue);
+				DependencyGraph::RemoveDependency(this, service.get());
+			}
+
+			if (!newValue.IsEmpty()) {
+				Service::Ptr service = Service::GetByNamePair(GetHostName(), newValue);
+				DependencyGraph::RemoveDependency(this, service.get());
+			}
+		}}}
+		navigate {{{
+			if (GetServiceName().IsEmpty())
+				return Service::Ptr();
+
+			Host::Ptr host = Host::GetByName(GetHostName());
+			return host->GetServiceByShortName(GetServiceName());
+		}}}
+	};
+
+	[config] double entry_time {
+		default {{{ return Utility::GetTime(); }}}
+	};
+	[config, enum] CommentType entry_type {
+		default {{{ return CommentUser; }}}
+	};
+	[config, required] String author;
+	[config, required] String text;
+	[config] double expire_time;
+	[state] int legacy_id;
+};
+
+}

@@ -1,0 +1,155 @@
+/******************************************************************************
+ * Icinga 2                                                                   *
+ * Copyright (C) 2012-2016 Icinga Development Team (https://www.icinga.org/)  *
+ *                                                                            *
+ * This program is free software; you can redistribute it and/or              *
+ * modify it under the terms of the GNU General Public License                *
+ * as published by the Free Software Foundation; either version 2             *
+ * of the License, or (at your option) any later version.                     *
+ *                                                                            *
+ * This program is distributed in the hope that it will be useful,            *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with this program; if not, write to the Free Software Foundation     *
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.             *
+ ******************************************************************************/
+
+#include "icinga/icingaapplication.hpp"
+#include "icinga/customvarobject.hpp"
+#include "base/array.hpp"
+#impl_include "icinga/checkcommand.hpp"
+#impl_include "icinga/eventcommand.hpp"
+
+library icinga;
+
+namespace icinga
+{
+
+code {{{
+/**
+ * The acknowledgement type of a service.
+ *
+ * @ingroup icinga
+ */
+enum AcknowledgementType
+{
+	AcknowledgementNone = 0,
+	AcknowledgementNormal = 1,
+	AcknowledgementSticky = 2
+};
+}}}
+
+abstract class Checkable : CustomVarObject
+{
+	[config, required, navigation] name(CheckCommand) check_command (CheckCommandRaw) {
+		navigate {{{
+			return CheckCommand::GetByName(GetCheckCommandRaw());
+		}}}
+	};
+	[config] int max_check_attempts {
+		default {{{ return 3; }}}
+	};
+	[config, navigation] name(TimePeriod) check_period (CheckPeriodRaw) {
+		navigate {{{
+			return TimePeriod::GetByName(GetCheckPeriodRaw());
+		}}}
+	};
+	[config] Value check_timeout;
+	[config] double check_interval {
+		default {{{ return 5 * 60; }}}
+	};
+	[config] double retry_interval {
+		default {{{ return 60; }}}
+	};
+	[config, navigation] name(EventCommand) event_command (EventCommandRaw) {
+		navigate {{{
+			return EventCommand::GetByName(GetEventCommandRaw());
+		}}}
+	};
+	[config] bool volatile;
+	[config] double flapping_threshold {
+		default {{{ return 30; }}}
+	};
+	[config] bool enable_active_checks {
+		default {{{ return true; }}}
+	};
+	[config] bool enable_passive_checks {
+		default {{{ return true; }}}
+	};
+	[config] bool enable_event_handler {
+		default {{{ return true; }}}
+	};
+	[config] bool enable_notifications {
+		default {{{ return true; }}}
+	};
+	[config] bool enable_flapping {
+		default {{{ return false; }}}
+	};
+	[config] bool enable_perfdata {
+		default {{{ return true; }}}
+	};
+
+	[config] String notes;
+	[config] String notes_url;
+	[config] String action_url;
+	[config] String icon_image;
+	[config] String icon_image_alt;
+
+	[state] double next_check;
+	[state] int check_attempt {
+		default {{{ return 1; }}}
+	};
+	[state, enum, no_user_view, no_user_modify] ServiceState state_raw {
+		default {{{ return ServiceUnknown; }}}
+	};
+	[state, enum] StateType state_type {
+		default {{{ return StateTypeSoft; }}}
+	};
+	[state, enum, no_user_view, no_user_modify] ServiceState last_state_raw {
+		default {{{ return ServiceUnknown; }}}
+	};
+	[state, enum, no_user_view, no_user_modify] ServiceState last_hard_state_raw {
+		default {{{ return ServiceUnknown; }}}
+	};
+	[state, enum] StateType last_state_type {
+		default {{{ return StateTypeSoft; }}}
+	};
+	[state] bool last_reachable {
+		default {{{ return true; }}}
+	};
+	[state] CheckResult::Ptr last_check_result;
+	[state] double last_state_change {
+		default {{{ return Application::GetStartTime(); }}}
+	};
+	[state] double last_hard_state_change {
+		default {{{ return Application::GetStartTime(); }}}
+	};
+	[state] double last_state_unreachable;
+	[state] bool last_in_downtime;
+	[state] bool force_next_check;
+	[state] int acknowledgement (AcknowledgementRaw) {
+		default {{{ return AcknowledgementNone; }}}
+	};
+	[state] double acknowledgement_expiry;
+	[state] bool force_next_notification;
+	[state] int flapping_positive;
+	[state] int flapping_negative;
+	[state] double flapping_last_change;
+	[no_storage, protected] bool flapping {
+		get {{{ return false; }}}
+	};
+	[no_storage] double last_check {
+		get;
+	};
+
+	[config, navigation] name(Endpoint) command_endpoint (CommandEndpointRaw) {
+		navigate {{{
+			return Endpoint::GetByName(GetCommandEndpointRaw());
+		}}}
+	};
+};
+
+}
