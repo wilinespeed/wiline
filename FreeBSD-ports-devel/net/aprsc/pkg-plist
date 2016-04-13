@@ -1,0 +1,14 @@
+%%ETCDIR%%/web/aprsc.css
+%%ETCDIR%%/web/aprsc.js
+%%ETCDIR%%/web/index.html
+%%ETCDIR%%/web/favicon.ico
+%%ETCDIR%%/web/aprsc-logo.png
+%%ETCDIR%%/web/aprsc-joulukissa.jpg
+%%ETCDIR%%/web/excanvas.min.js
+%%ETCDIR%%/web/jquery.min.js
+%%ETCDIR%%/web/jquery.flot.min.js
+%%ETCDIR%%/web/jquery.flot.selection.min.js
+@sample etc/aprsc/aprsc.conf.sample
+man/man8/aprsc.8.gz
+sbin/aprsc
+sbin/aprsc_munin

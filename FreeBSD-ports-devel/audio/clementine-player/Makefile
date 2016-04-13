@@ -1,0 +1,115 @@
+# Created by: Veniamin Gvozdikov <vg@FreeBSD.org>
+# $FreeBSD$
+
+PORTNAME=	clementine
+PORTVERSION=	1.2.3
+PORTREVISION=	7
+CATEGORIES=	audio
+PKGNAMESUFFIX=	-player
+
+MAINTAINER=	sbruno@FreeBSD.org
+COMMENT=	Cross-platform music player based on Amarok 1.4
+
+LICENSE=	GPLv3+
+LICENSE_FILE=	${WRKSRC}/COPYING
+
+LIB_DEPENDS=	libtag.so:audio/taglib \
+		libchromaprint.so:audio/chromaprint \
+		libprotobuf.so:devel/protobuf \
+		libqca.so:devel/qca \
+		libqjson.so:devel/qjson \
+		libfftw3.so:math/fftw3 \
+		libechonest.so:audio/libechonest
+
+BUILD_DEPENDS=	${LOCALBASE}/include/boost/shared_ptr.hpp:devel/boost-libs
+
+USE_GITHUB=	yes
+GH_ACCOUNT=	${PORTNAME}${PKGNAMESUFFIX}
+GH_PROJECT=	Clementine
+
+USES=		compiler:c++11-lib cmake desktop-file-utils execinfo \
+		gettext-tools pkgconfig
+USE_GL=		glew
+USE_QT4=	dbus gui xml qmake_build uic_build moc_build rcc_build \
+		linguist_build network sql opengl qtestlib corelib webkit \
+		imageformats
+
+INSTALLS_ICONS=	yes
+USE_GSTREAMER=	gio ogg mp3 flac soup vorbis
+CONFLICTS_BUILD=	qt-3.*
+
+CFLAGS+=	-Wno-deprecated-register
+
+CMAKE_ARGS+=	-DCMAKE_LIBRARY_PATH:PATH="${LOCALBASE}/lib:${PREFIX}/lib" \
+		-DENABLE_DBUS=ON -DENABLE_SPARKLE=OFF \
+		-DENABLE_SOUNDMENU=OFF -DENABLE_SPOTIFY_BLOB=OFF \
+		-DENABLE_UBUNTU_ONE=OFF -DENABLE_SKYDRIVE=OFF
+
+OPTIONS_DEFINE=		AUDIOCD BREAKPAD DEVICEKIT DROPBOX BOX GIO GOOGLE_DRIVE \
+			GPOD LASTFM MTP VISUALISATION WIIMOTEDEV MOODBAR
+
+OPTIONS_SUB=		VISUALISATION
+
+AUDIOCD_DESC=		Devices: Audio CD support
+BREAKPAD_DESC=		Crash reporting
+BOX_DESC=		Box Drive support
+DEVICEKIT_DESC=		Devices: DeviceKit backend
+DROPBOX_DESC=		Dropbox Support
+GIO_DESC=		Devices: GIO device backend
+GOOGLE_DRIVE_DESC=	Google Drive support
+GPOD_DESC=		iPod support
+LASTFM_DESC=		Support Last.fm service (requires ruby)
+MTP_DESC=		MTP device support
+VISUALISATION_DESC=	Visualisations from projectM
+WIIMOTEDEV_DESC=	Wiimote support
+MOODBAR_DESC=		Moodbar Support
+
+OPTIONS_DEFAULT=	AUDIOCD BOX DEVICEKIT DROPBOX GIO GOOGLE_DRIVE GPOD \
+			LASTFM MTP VISUALISATION WIIMOTEDEV MOODBAR
+
+DROPBOX_CMAKE_ON=	-DENABLE_DROPBOX=ON
+DROPBOX_CMAKE_OFF=	-DENABLE_DROPBOX=OFF
+
+MOODBAR_CMAKE_ON=	-DENABLE_MOODBAR=ON
+MOODBAR_CMAKE_OFF=	-DENABLE_MOODBAR=OFF
+
+AUDIOCD_LIB_DEPENDS=	libcdio.so:sysutils/libcdio
+AUDIOCD_CMAKE_ON=	-DENABLE_AUDIOCD=ON
+AUDIOCD_CMAKE_OFF=	-DENABLE_AUDIOCD=OFF
+
+BOX_CMAKE_ON=	-DENABLE_BOX=ON
+BOX_CMAKE_OFF=	-DENABLE_BOX=OFF
+
+BREAKPAD_CMAKE_ON=	-DENABLE_BREAKPAD=ON
+BREAKPAD_CMAKE_OFF=	-DENABLE_BREAKPAD=OFF
+
+DEVICEKIT_CMAKE_ON=	-DENABLE_DEVICEKIT=ON
+DEVICEKIT_CMAKE_OFF=	-DENABLE_DEVICEKIT=OFF
+
+GIO_USE=	GNOME=glib20
+GIO_CMAKE_ON=	-DENABLE_GIO=ON
+GIO_CMAKE_OFF=	-DENABLE_GIO=OFF
+
+GOOGLE_DRIVE_BUILD_DEPENDS=	google-sparsehash>=2.0.2:devel/google-sparsehash
+GOOGLE_DRIVE_CMAKE_ON=	-DENABLE_GOOGLE_DRIVE=ON
+GOOGLE_DRIVE_CMAKE_OFF=	-DENABLE_GOOGLE_DRIVE=OFF
+
+GPOD_LIB_DEPENDS=	libgpod.so:audio/libgpod
+GPOD_CMAKE_ON=	-DENABLE_LIBGPOD=ON
+GPOD_CMAKE_OFF=	-DENABLE_LIBGPOD=OFF
+
+LASTFM_LIB_DEPENDS=	liblastfm.so:audio/liblastfm
+LASTFM_CMAKE_ON=	-DENABLE_LIBLASTFM=ON
+LASTFM_CMAKE_OFF=	-DENABLE_LIBLASTFM=OFF
+
+MPT_LIB_DEPENDS=	libmtp.so:multimedia/libmtp
+MTP_CMAKE_ON=	-DENABLE_LIBMTP=ON
+MTP_CMAKE_OFF=	-DENABLE_LIBMTP=OFF
+
+VISUALISATION_CMAKE_ON=	-DENABLE_VISUALISATIONS=ON
+VISUALISATION_CMAKE_OFF=	-DENABLE_VISUALISATIONS=OFF
+
+WIIMOTEDEV_CMAKE_ON=	-DENABLE_WIIMOTEDEV=ON
+WIIMOTEDEV_CMAKE_OFF=	-DENABLE_WIIMOTEDEV=OFF
+
+.include <bsd.port.mk>

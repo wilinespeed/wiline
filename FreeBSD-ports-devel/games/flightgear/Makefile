@@ -1,0 +1,61 @@
+# Created by: Brian Buchanan <brian@CSUA.Berkeley.EDU>
+# $FreeBSD$
+
+PORTNAME=	flightgear
+PORTVERSION=	2016.1.1
+CATEGORIES=	games
+MASTER_SITES=	SF/flightgear/release-${PORTVERSION:R}
+
+MAINTAINER=	martymac@FreeBSD.org
+COMMENT=	The FlightGear flight simulator
+
+LICENSE=	GPLv2
+
+LIB_DEPENDS=	libpng.so:graphics/png \
+		libboost_thread.so:devel/boost-libs \
+		libfltk.so:x11-toolkits/fltk \
+		libosg.so:graphics/osg \
+		libspeex.so:audio/speex
+BUILD_DEPENDS=	${LOCALBASE}/lib/libplibsl.a:x11-toolkits/plib \
+		${LOCALBASE}/lib/libSimGearCore.a:devel/simgear
+RUN_DEPENDS=	${LOCALBASE}/lib/libplibsl.a:x11-toolkits/plib \
+		${LOCALBASE}/lib/libSimGearCore.a:devel/simgear \
+		${LOCALBASE}/share/flightgear/version:games/flightgear-data
+
+USE_XORG=	ice sm x11 xext xft xi xinerama xmu xt
+USE_GL=		gl glu glut
+USE_QT5=	core buildtools qmake widgets
+
+USES=		alias cmake compiler cpe dos2unix jpeg openal:al,alut sqlite \
+		tar:bzip2
+DOS2UNIX_REGEX=	.*\.(c|h|cxx|cpp|hxx|hpp)
+CMAKE_ARGS+=	-DENABLE_JS_SERVER:BOOL=ON \
+		-DSYSTEM_SQLITE:BOOL=ON \
+		-DFG_DATA_DIR:PATH=${LOCALBASE}/share/${PORTNAME} \
+		-DCMAKE_INSTALL_MANDIR:PATH=${MANPREFIX}/man \
+		-DFGCOM_DATA_PATH:PATH=${DATADIR}
+LDFLAGS+=	-L${LOCALBASE}/lib
+
+OPTIONS_DEFINE=	DBUS
+OPTIONS_DEFAULT=	DBUS
+DBUS_LIB_DEPENDS=	libdbus-1.so:devel/dbus
+DBUS_USES=	pkgconfig
+DBUS_CMAKE_ON=	-DUSE_DBUS:BOOL=ON
+DBUS_CMAKE_OFF=	-DUSE_DBUS:BOOL=OFF
+
+.include <bsd.port.pre.mk>
+
+# Chase devel/simgear compiler version
+.if ${COMPILER_TYPE} == gcc && ${COMPILER_VERSION} < 46
+USE_GCC=	yes
+.endif
+
+post-patch:
+	${MV} "${WRKSRC}/src/GUI/ndb-small-icon .png" \
+		"${WRKSRC}/src/GUI/ndb-small-icon.png"
+
+post-install:
+	${INSTALL_PROGRAM} ${WRKSRC}/utils/js_server/js_server \
+		${STAGEDIR}${PREFIX}/bin
+
+.include <bsd.port.post.mk>

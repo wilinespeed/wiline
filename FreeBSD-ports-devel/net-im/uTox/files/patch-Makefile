@@ -1,0 +1,52 @@
+--- Makefile.orig	2016-03-21 02:14:57 UTC
++++ Makefile
+@@ -2,9 +2,9 @@
+ # set to anything else to disable them
+ DBUS 			= 1
+ V4LCONVERT 		= 1
+-FILTER_AUDIO 	= 0
++FILTER_AUDIO		= 1
+ UNITY 			= 0
+-XP 				= 0
++XP 			= 0
+ 
+ DEPS = libtoxav libtoxcore openal vpx libsodium
+ 
+@@ -53,6 +53,37 @@ ifeq ($(UNAME_S), Linux)
+ 
+ 	TRAY_OBJ = icons/utox-128x128.o
+ 	TRAY_GEN = $(LD) -r -b binary icons/utox-128x128.png -o
++else ifeq ($(UNAME_S), FreeBSD)
++	OUT_FILE = utox
++
++	DEPS += fontconfig freetype2 x11 xext xrender
++
++	ifeq ($(V4LCONVERT), 1)
++		DEPS += libv4lconvert
++	else
++		CFLAGS += -DNO_V4LCONVERT
++	endif
++
++	ifeq ($(UNITY), 1)
++		DEPS += messaging-menu unity
++		CFLAGS += -DUNITY
++	endif
++
++	ifeq ($(DBUS), 1)
++		DEPS += dbus-1
++	else
++		CFLAGS += -DNO_DBUS
++	endif
++
++	CFLAGS += $(shell pkg-config --cflags $(DEPS))
++
++	LDFLAGS += $(shell pkg-config --libs $(DEPS))
++
++	OS_SRC = $(wildcard src/xlib/*.c)
++	OS_OBJ = $(OS_SRC:.c=.o)
++
++	TRAY_OBJ = icons/utox-128x128.o
++	TRAY_GEN = $(LD) -r -b binary icons/utox-128x128.png -o
+ else ifeq ($(UNAME_O), Cygwin)
+ 	OUT_FILE = utox.exe
+ 

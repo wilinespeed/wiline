@@ -1,0 +1,10 @@
+--- Makefile.am.orig	2016-02-29 16:55:42 UTC
++++ Makefile.am
+@@ -1,6 +1,6 @@
+ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
+ 
+-SUBDIRS = src ui data assets po tests
++SUBDIRS = src ui data assets po
+ 
+ EXTRA_DIST = \
+ 	vapi/config.vapi \

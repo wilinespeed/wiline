@@ -1,0 +1,45 @@
+--- src/dird/Makefile.in	2015-12-03 03:22:54.000000000 -0500
++++ src/dird/Makefile.in	2016-01-29 23:53:16.549306000 -0500
+@@ -50,6 +50,7 @@
+ INCLUDES += -I$(srcdir) -I$(basedir) -I$(basedir)/include
+ 
+ JANSSON_CPPFLAGS = @JANSSON_INC@
++JANSSON_LDFLAGS = @JANSSON_LIBS@
+ 
+ .SUFFIXES:	.c .o
+ .PHONY:
+@@ -79,7 +80,7 @@
+ 	$(LIBTOOL_LINK) $(CXX) $(WLDFLAGS) $(LDFLAGS) -L../lib -L../cats -L../findlib -o $@ $(SVROBJS) \
+ 	      $(NDMP_LIBS) -lbareosfind -lbareossql -lbareoscats -lbareoscfg -lbareos -lm $(DLIB) \
+ 	      $(DB_LIBS) $(LIBS) $(WRAPLIBS) $(GETTEXT_LIBS) $(CAP_LIBS) \
+-	      $(OPENSSL_LIBS_NONSHARED) $(GNUTLS_LIBS_NONSHARED)
++	      $(OPENSSL_LIBS) $(GNUTLS_LIBS_NONSHARED) $(JANSSON_LDFLAGS)
+ 
+ bareos-dbcheck: Makefile $(DBCHKOBJS) \
+ 	 ../lib/libbareos$(DEFAULT_ARCHIVE_TYPE) \
+@@ -90,7 +91,7 @@
+ 	@echo "Linking $@ ..."
+ 	$(LIBTOOL_LINK) $(CXX) $(LDFLAGS) -L../lib -L../findlib -L../cats -o $@ $(DBCHKOBJS) \
+ 	      -lbareoscats -lbareossql -lbareoscfg -lbareosfind -lbareos -lm $(DB_LIBS) $(LIBS) $(GETTEXT_LIBS) \
+-	      $(OPENSSL_LIBS_NONSHARED) $(GNUTLS_LIBS_NONSHARED)
++	      $(OPENSSL_LIBS) $(GNUTLS_LIBS_NONSHARED) $(JANSSON_LDFLAGS)
+ 
+ testfind: Makefile $(TSTFNDOBJS) \
+ 	 ../lib/libbareos$(DEFAULT_ARCHIVE_TYPE) \
+@@ -101,7 +102,7 @@
+ 	@echo "Linking $@ ..."
+ 	$(LIBTOOL_LINK) $(CXX) $(LDFLAGS) -L../lib -L../findlib -L../cats -o $@ $(TSTFNDOBJS) \
+ 	      -lbareoscats -lbareossql -lbareoscfg -lbareosfind -lbareos -lm $(DB_LIBS) $(LIBS) $(GETTEXT_LIBS) \
+-	      $(OPENSSL_LIBS_NONSHARED) $(GNUTLS_LIBS_NONSHARED)
++	      $(OPENSSL_LIBS) $(GNUTLS_LIBS_NONSHARED)
+ 
+ static-bareos-dir:  Makefile $(SVROBJS) \
+ 	            ../lib/libbareos$(DEFAULT_ARCHIVE_TYPE) \
+@@ -142,7 +143,6 @@
+ 	$(LIBTOOL_INSTALL) $(INSTALL_PROGRAM) bareos-dir $(DESTDIR)$(sbindir)/bareos-dir
+ 	$(LIBTOOL_INSTALL) $(INSTALL_PROGRAM) bareos-dbcheck $(DESTDIR)$(sbindir)/bareos-dbcheck
+ 	@srcconf=bareos-dir.conf; \
+-	   $(MKDIR) ${DESTDIR}${confdir}/bareos-dir.d/; \
+ 	   if  test -f ${DESTDIR}${confdir}/$$srcconf; then \
+ 	      destconf=$$srcconf.new; \
+ 	      echo "  ==> Found existing $$srcconf, installing new conf file as $$destconf"; \
